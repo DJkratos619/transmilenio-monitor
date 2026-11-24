@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransMilenio CCO - Monitoreo de Estaciones, Pérdidas Económicas y Toma de Decisiones</title>
+    <!-- Estilos 100% Locales y Autónomos (Cero dependencias externas) -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ============================================================================== -->
+        <!-- HEADER / BARRA SUPERIOR DE CONTROL OPERATIVO -->
+        <!-- ============================================================================== -->
+        <header class="app-header">
+            <div class="header-top">
+                
+                <!-- Marca TransMilenio -->
+                <div class="brand-section">
+                    <div class="brand-logo">TM</div>
+                    <div class="brand-title-wrap">
+                        <h1>
+                            TransMilenio CCO
+                            <span class="brand-badge">Monitoreo & Decisión</span>
+                            <span class="brand-badge" style="background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd;">PROYECTO ESEIT</span>
+                            <span class="live-indicator"></span>
+                        </h1>
+                        <div class="brand-sub">
+                            Ejecución y Control de Proyectos • ESEIT • Cifras Oficiales Concejo de Bogotá 2024
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel de KPIs Financieros y Operativos -->
+                <div class="kpis-bar">
+                    <!-- Pérdida Total -->
+                    <div class="kpi-card">
+                        <span class="kpi-icon">📉</span>
+                        <div>
+                            <div class="kpi-label">Pérdida Total Estimada</div>
+                            <div id="kpi-perdida-total" class="kpi-value val-loss">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- Tasa Evasión -->
+                    <div class="kpi-card">
+                        <span class="kpi-icon">⚠️</span>
+                        <div>
+                            <div class="kpi-label">Tasa Promedio Evasión</div>
+                            <div id="kpi-tasa-evasion" class="kpi-value val-amber">Cargando...</div>
+                        </div>
+                    </div>
+
+                    <!-- Estaciones Críticas -->
+                    <div class="kpi-card">
+                        <span class="kpi-icon">🚨</span>
+                        <div>
+                            <div class="kpi-label">Estaciones Críticas / Alerta</div>
+                            <div id="kpi-criticas-count" class="kpi-value val-crit">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Desvíos Activos -->
+                    <div class="kpi-card">
+                        <span class="kpi-icon">🔀</span>
+                        <div>
+                            <div class="kpi-label">Rutas Alternas Activas</div>
+                            <div id="kpi-desvios-count" class="kpi-value val-sky">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Exportar Informe -->
+                    <button id="btn-export-report" class="btn-export">
+                        <span>📄</span> Exportar Informe
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Radio Ticker de Despacho -->
+            <div class="header-ticker">
+                <span class="ticker-badge">📻 RADIO CCO</span>
+                <div class="ticker-marquee">
+                    <span id="ticker-content">[20:45] [OPERACIÓN] Sistema operando en modo contingencia preventiva. Monitoreo satelital activo en 45 nodos troncales de Bogotá.</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================================================== -->
+        <!-- ZONA PRINCIPAL: MAPA GEOESPACIAL DE BOGOTÁ + PANEL DE GESTIÓN -->
+        <!-- ============================================================================== -->
+        <main class="main-stage">
+
+            <!-- CONTENEDOR DEL MAPA VECTORIAL -->
+            <div class="map-viewport">
+                
+                <div id="map-container"></div>
+
+                <!-- HUD Superior Flotante sobre el Mapa -->
+                <div class="map-hud-top">
+                    <!-- Selector de Mapa Real en Línea (Sin API Key) -->
+                    <div class="hud-panel">
+                        <span class="hud-label">Mapa Base:</span>
+                        <select id="map-style-select" class="hud-select" style="font-weight: 700; color: #38bdf8;">
+                            <option value="esri-dark">🌃 Esri Dark Canvas (Noche)</option>
+                            <option value="satellite">🛰️ Satélite Real (Esri HD)</option>
+                            <option value="esri-streets">🛣️ Esri Calles de Bogotá</option>
+                            <option value="osm">🗺️ OpenStreetMap Oficial</option>
+                            <option value="esri-topo">⛰️ Esri Topográfico & Cerros</option>
+                            <option value="radar">📐 Esquema CCO (Sintético)</option>
+                        </select>
+                    </div>
+
+                    <div class="hud-panel">
+                        <span class="hud-label">Métrica:</span>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="map-metric-mode" value="perdidas" checked>
+                                <span style="color: #f87171; font-weight: bold;">Pérdidas COP</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="map-metric-mode" value="estado">
+                                <span>Estado Operativo</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="map-metric-mode" value="evasion">
+                                <span>Tasa Evasión</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="hud-panel">
+                        <span class="hud-label">Troncal:</span>
+                        <select id="filter-troncal" class="hud-select">
+                            <option value="todos">Todas las Troncales</option>
+                        </select>
+                    </div>
+
+                    <!-- Botones de Salto Rápido a Nodos Críticos -->
+                    <div style="display: flex; gap: 4px;">
+                        <button id="btn-recenter-map" class="hud-btn" title="Ver toda la ciudad">
+                            📍 Bogotá Centro
+                        </button>
+                        <button class="hud-btn btn-quick-hub" data-lat="4.6295" data-lng="-74.1685" title="Ir a Portal Américas">
+                            🔴 P. Américas
+                        </button>
+                        <button class="hud-btn btn-quick-hub" data-lat="4.6070" data-lng="-74.0980" title="Ir a Ricaurte / NQS">
+                            🔴 Ricaurte
+                        </button>
+                        <button class="hud-btn btn-quick-hub" data-lat="4.7550" data-lng="-74.0450" title="Ir a Portal Norte">
+                            🟢 P. Norte
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controles de Zoom Nativos (+ / -) -->
+                <div class="map-zoom-controls">
+                    <button id="btn-zoom-in" class="zoom-btn" title="Acercar">+</button>
+                    <button id="btn-zoom-out" class="zoom-btn" title="Alejar">−</button>
+                </div>
+
+                <!-- HUD Inferior Izquierdo: Capas de Visualización -->
+                <div class="map-hud-bottom-left">
+                    <div class="hud-panel layers-card">
+                        <div class="layers-header">
+                            <span>Capas Geoespaciales</span>
+                            <span style="color: #38bdf8;">TM GIS</span>
+                        </div>
+                        <div class="layers-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="toggle-corredores" checked>
+                                <span>Corredores</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="toggle-rutas" checked>
+                                <span>Rutas</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="toggle-buses" checked>
+                                <span>Buses Vivos</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="toggle-heatmap">
+                                <span>Calor Pérdidas</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HUD Inferior Derecho: Leyenda de Semáforo -->
+                <div class="map-hud-bottom-right">
+                    <div class="hud-panel legend-items">
+                        <div class="legend-badge">
+                            <span class="dot dot-red"></span>
+                            <span>Crítico (&gt;$1.000M)</span>
+                        </div>
+                        <div class="legend-badge">
+                            <span class="dot dot-amber"></span>
+                            <span>Alerta</span>
+                        </div>
+                        <div class="legend-badge">
+                            <span class="dot dot-emerald"></span>
+                            <span>Normal</span>
+                        </div>
+                        <div class="legend-badge">
+                            <span class="dot dot-sky"></span>
+                            <span>Ruta Alterna</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ========================================================================== -->
+            <!-- SIDEBAR LATERAL: RANKINGS, FACTORES, RUTAS, SIMULADOR Y AUDITORÍA -->
+            <!-- ========================================================================== -->
+            <aside class="sidebar">
+                
+                <!-- Pestañas del Sidebar -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab-btn active" data-tab="rankings">
+                        🏆 Ranking
+                    </button>
+                    <button class="sidebar-tab-btn" data-tab="factores">
+                        📊 Factores
+                    </button>
+                    <button class="sidebar-tab-btn" data-tab="rutas">
+                        🔀 Rutas
+                    </button>
+                    <button class="sidebar-tab-btn" data-tab="simulador">
+                        🔮 Simulador
+                    </button>
+                    <button class="sidebar-tab-btn" data-tab="auditoria">
+                        📜 Bitácora
+                    </button>
+                    <button class="sidebar-tab-btn" data-tab="eseit" style="color: #60a5fa; font-weight: 800;">
+                        🎓 ESEIT
+                    </button>
+                </div>
+
+                <div class="sidebar-body">
+
+                    <!-- PESTAÑA 1: RANKING DE ESTACIONES CON PÉRDIDAS -->
+                    <div id="tab-content-rankings" class="sidebar-tab-content">
+                        <div class="search-row">
+                            <input type="text" id="search-station" class="search-input" placeholder="Buscar estación o troncal...">
+                            <select id="sort-ranking-by" class="sort-select">
+                                <option value="perdidas">Pérdida ($ COP)</option>
+                                <option value="evasion">Evasión (%)</option>
+                                <option value="vandalismo">Vandalismo ($)</option>
+                                <option value="pasajeros">Pasajeros/Día</option>
+                            </select>
+                        </div>
+                        <div style="font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between;">
+                            <span>Estaciones con mayor impacto económico</span>
+                            <span style="color: #38bdf8;">Click para evaluar ➜</span>
+                        </div>
+                        <div id="ranking-list" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Generado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 2: ANÁLISIS DE FACTORES -->
+                    <div id="tab-content-factores" class="sidebar-tab-content hidden">
+                        <!-- Gráfico Dona Factores Globales -->
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <span>Causas de Pérdida Económica Global</span>
+                                <span style="font-size: 10px; color: #94a3b8;">Sistema TM</span>
+                            </div>
+                            <div class="chart-box">
+                                <canvas id="chart-factores"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico Top Estaciones -->
+                        <div class="chart-card">
+                            <div class="chart-title">
+                                <span>Top 6 Estaciones con Pérdidas Más Severas</span>
+                            </div>
+                            <div class="chart-box" style="height: 200px;">
+                                <canvas id="chart-top-estaciones"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Glosario de Factores -->
+                        <div style="background: rgba(17, 24, 39, 0.5); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 10px; color: #cbd5e1; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="font-weight: 700; color: #ffffff;">Diagnóstico de Causas:</div>
+                            <div><b style="color: #ef4444;">1. Evasión ("Colados"):</b> Salto de torniquetes y apertura de puertas. Abarca más del 60% de las pérdidas.</div>
+                            <div><b style="color: #f97316;">2. Vandalismo:</b> Daños a vidrios, actuadores de puertas automáticas y validadores.</div>
+                            <div><b style="color: #a855f7;">3. Bloqueos:</b> Marchas y cierres viales que paralizan la flota biarticulada.</div>
+                            <div><b style="color: #3b82f6;">4. Hurto e Inseguridad:</b> Deserción de pasajeros hacia otros medios por percepción de riesgo.</div>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 3: RUTAS Y DESVÍOS -->
+                    <div id="tab-content-rutas" class="sidebar-tab-content hidden">
+                        <div style="font-size: 11px; color: #94a3b8;">
+                            Monitoreo de trazados troncales y activación de <b>Rutas Alternas de Emergencia</b>:
+                        </div>
+                        <div id="rutas-control-list" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Generado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 4: SIMULADOR WHAT-IF -->
+                    <div id="tab-content-simulador" class="sidebar-tab-content hidden">
+                        <div class="sim-box">
+                            <div style="font-weight: 700; font-size: 11px; color: #38bdf8;">
+                                Simulador de Decisiones & ROI de Inversión
+                            </div>
+                            
+                            <!-- Slider 1: Policía -->
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <span>Incrementar Presencia Policial / Gestores:</span>
+                                    <span id="sim-val-policia" class="slider-val">+0%</span>
+                                </div>
+                                <input type="range" id="sim-slider-policia" min="0" max="100" value="0" step="10">
+                            </div>
+
+                            <!-- Slider 2: Puertas y Torniquetes -->
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <span>Torniquetes Piso-Techo y Puertas Blindadas:</span>
+                                    <span id="sim-val-puertas" class="slider-val">0%</span>
+                                </div>
+                                <input type="range" id="sim-slider-puertas" min="0" max="100" value="0" step="10">
+                            </div>
+
+                            <!-- Slider 3: Desvíos -->
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <span>Optimización Frecuencia y Desvíos Inteligentes:</span>
+                                    <span id="sim-val-rutas" class="slider-val">+0%</span>
+                                </div>
+                                <input type="range" id="sim-slider-rutas" min="0" max="50" value="0" step="5">
+                            </div>
+
+                            <!-- Resultados -->
+                            <div class="sim-results">
+                                <div class="sim-metric-card">
+                                    <div class="sim-metric-title">Ahorro Anual Proyectado</div>
+                                    <div id="sim-ahorro-anual" class="sim-metric-val" style="color: #34d399;">$0 COP</div>
+                                </div>
+                                <div class="sim-metric-card">
+                                    <div class="sim-metric-title">Retorno Inversión</div>
+                                    <div id="sim-roi-meses" class="sim-metric-val" style="color: #38bdf8;">0 meses</div>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+                                <span>Reducción Evasión Global:</span>
+                                <span id="sim-evasion-reducida" style="color: #34d399; font-weight: 700;">-0.0%</span>
+                            </div>
+
+                            <button id="btn-aplicar-whatif" class="btn-apply-sim">
+                                ⚡ Implementar Plan Estratégico en Vivo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 5: AUDITORÍA DE DECISIONES -->
+                    <div id="tab-content-auditoria" class="sidebar-tab-content hidden">
+                        <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+                            <span>Registro de Intervenciones Despachadas</span>
+                            <span style="color: #34d399; font-weight: 700;">Bitácora CCO</span>
+                        </div>
+                        <div id="decisiones-audit-list" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Generado dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 6: PROYECTO ACADÉMICO ESEIT (SEMANA 1-8) -->
+                    <div id="tab-content-eseit" class="sidebar-tab-content hidden">
+                        
+                        <!-- Tarjeta de Ficha Técnica del Proyecto -->
+                        <div style="background: rgba(30, 58, 138, 0.25); border: 1px solid rgba(96, 165, 250, 0.4); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 10px; font-weight: 800; color: #93c5fd; text-transform: uppercase;">ESEIT • Ejecución y Control</span>
+                                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.3); color: #bfdbfe;">Entrega Final Semana 8</span>
+                            </div>
+                            <div style="font-size: 12px; font-weight: 800; color: #ffffff;">
+                                Evasión del pago de pasajes del sistema de transporte público de Bogotá
+                            </div>
+                            <div style="font-size: 10px; color: #cbd5e1;">
+                                <b>Equipo:</b> Karina Julieth Garzón, Jair Alexander Hernández, Juan Manuel Muñoz, Josué Ospino Ramírez
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8;">
+                                <b>Patrocinador:</b> Alcaldía Mayor de Bogotá • <b>Presupuesto Ref:</b> 3 Billones COP
+                            </div>
+                        </div>
+
+                        <!-- Cifras Oficiales del Documento (Concejo 2024) -->
+                        <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #f8fafc; display: flex; justify-content: space-between;">
+                                <span>Cifras Oficiales Base (Concejo de Bogotá 2024)</span>
+                                <span style="color: #fbbf24;">Línea Base</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px;">
+                                <div style="background: #090d16; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                    <div style="color: #94a3b8;">Tasa Evasión Oficial:</div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #fbbf24; font-family: monospace;">13.14%</div>
+                                </div>
+                                <div style="background: #090d16; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                    <div style="color: #94a3b8;">Pérdida Diaria Oficial:</div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #f87171; font-family: monospace;">$719M COP/día</div>
+                                </div>
+                                <div style="background: #090d16; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                    <div style="color: #94a3b8;">Viajes No Validados:</div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #ef4444; font-family: monospace;">89M viajes/año</div>
+                                </div>
+                                <div style="background: #090d16; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                    <div style="color: #94a3b8;">Tarifa Oficial Pasaje:</div>
+                                    <div style="font-size: 12px; font-weight: 800; color: #34d399; font-family: monospace;">$3.200 COP</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matriz de Gestión de Riesgos (R1 a R10) -->
+                        <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 11px; font-weight: 700; color: #ffffff;">
+                                    Matriz de Riesgos del Proyecto (R1 - R10)
+                                </div>
+                                <span style="font-size: 9px; color: #94a3b8;">Plan de Calidad ESEIT</span>
+                            </div>
+                            <div id="eseit-risk-matrix-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto;">
+                                <!-- Generado dinámicamente con app.js -->
+                            </div>
+                        </div>
+
+                        <!-- Botón Descargar Informe Ejecutivo Semana 8 -->
+                        <button id="btn-export-eseit-doc" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #ffffff; border: none; padding: 10px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); transition: all 0.2s;">
+                            <span>📥</span> Descargar Informe Semana 8 (Planificado vs. Ejecutado)
+                        </button>
+
+                    </div>
+
+                </div>
+            </aside>
+
+        </main>
+
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- MODAL DE DETALLE Y EVALUACIÓN DE ESTACIÓN -->
+    <!-- ============================================================================== -->
+    <div id="station-modal" class="modal-overlay hidden">
+        <div id="modal-backdrop" style="position: absolute; inset: 0;"></div>
+        
+        <div class="modal-card" style="position: relative; z-index: 2;">
+            <!-- Header -->
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="modal-troncal-badge" class="troncal-chip" style="width: 26px; height: 26px; font-size: 13px;">A</span>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h2 id="modal-station-name" style="font-size: 16px; font-weight: 800; color: #ffffff;">Nombre Estación</h2>
+                            <span id="modal-station-status"></span>
+                        </div>
+                        <div id="modal-troncal-name" style="font-size: 11px; color: #94a3b8;">Troncal</div>
+                    </div>
+                </div>
+                <button id="modal-close-btn" style="background: none; border: none; color: #94a3b8; font-size: 20px; font-weight: bold; cursor: pointer;">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+                
+                <!-- KPIs de la Estación -->
+                <div class="modal-grid-kpis">
+                    <div class="modal-kpi">
+                        <span style="font-size: 9px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Pérdida Mensual</span>
+                        <span id="modal-perdidas-total" style="font-size: 13px; font-weight: 800; color: #f87171; font-family: 'JetBrains Mono', monospace;">$0</span>
+                    </div>
+                    <div class="modal-kpi">
+                        <span style="font-size: 9px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Tasa Evasión</span>
+                        <span id="modal-tasa-evasion" style="font-size: 13px; font-weight: 800; color: #fbbf24; font-family: 'JetBrains Mono', monospace;">0%</span>
+                    </div>
+                    <div class="modal-kpi">
+                        <span style="font-size: 9px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Puertas Operativas</span>
+                        <span id="modal-puertas-estado" style="font-size: 13px; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">0%</span>
+                    </div>
+                    <div class="modal-kpi">
+                        <span style="font-size: 9px; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Policía Actual</span>
+                        <span id="modal-policia-actual" style="font-size: 13px; font-weight: 800; color: #60a5fa; font-family: 'JetBrains Mono', monospace;">0 unds</span>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Causas y Diagnóstico -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center;">
+                    <div style="background: var(--bg-darkest); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #f8fafc; margin-bottom: 6px;">Desglose de Causas de Pérdida</div>
+                        <div style="height: 140px; position: relative;">
+                            <canvas id="chart-modal-factors"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--bg-darkest); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+                        <div style="font-weight: 700; color: #ffffff; margin-bottom: 4px;">🔍 Diagnóstico Operativo:</div>
+                        <p id="modal-descripcion-factores">Descripción del factor de riesgo...</p>
+                    </div>
+                </div>
+
+                <!-- Decisiones e Intervenciones Recomendadas -->
+                <div>
+                    <div style="font-size: 12px; font-weight: 800; color: #ffffff; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                        <span>⚡ Decisiones e Intervenciones Tácticas Sugeridas</span>
+                        <span style="font-size: 10px; color: #38bdf8;">Ejecución en 1-Click</span>
+                    </div>
+                    <div id="modal-decisions-list" class="modal-decisions-list">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Rutas Alternas Disponibles -->
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">
+                        🔀 Desvíos y Rutas Alternas de Contingencia
+                    </div>
+                    <div id="modal-alternate-routes" style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button onclick="window.app.closeStationModal()" style="background: #374151; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    Cerrar Detalle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor Toasts -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts de la Aplicación -->
+    <script src="data.js"></script>
+    <script src="map.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
