@@ -138,6 +138,17 @@
                         </select>
                     </div>
 
+                    <!-- Control de Velocidad de la Simulación -->
+                    <div class="hud-panel">
+                        <span class="hud-label">Simulación:</span>
+                        <div class="speed-btn-group">
+                            <button class="hud-speed-btn" data-speed="0" title="Pausar animación de buses">⏸️ Pausa</button>
+                            <button class="hud-speed-btn" data-speed="0.5" title="Velocidad lenta para inspección vial">0.5x</button>
+                            <button class="hud-speed-btn active" data-speed="1" title="Velocidad realista en calzadas">1x Real</button>
+                            <button class="hud-speed-btn" data-speed="2" title="Velocidad acelerada">2x</button>
+                        </div>
+                    </div>
+
                     <!-- Botones de Salto Rápido a Nodos Críticos -->
                     <div style="display: flex; gap: 4px;">
                         <button id="btn-recenter-map" class="hud-btn" title="Ver toda la ciudad">
@@ -218,6 +229,65 @@
             <!-- ========================================================================== -->
             <aside class="sidebar">
                 
+                <!-- ============================================================================== -->
+                <!-- PANEL DINÁMICO DE TELEMETRÍA CCO EN TIEMPO REAL -->
+                <!-- ============================================================================== -->
+                <div class="sidebar-live-card">
+                    <div class="live-card-header">
+                        <div class="live-card-title">
+                            <span class="live-radar-dot"></span>
+                            <span>CCO TELEMETRÍA EN DIRECTO</span>
+                        </div>
+                        <span class="live-rate-tag font-mono">+$8.322 COP/seg</span>
+                    </div>
+
+                    <!-- Contador de Pérdidas de Hoy en Vivo -->
+                    <div class="live-counter-section">
+                        <div class="live-counter-label">Pérdida por Evasión Hoy en Bogotá:</div>
+                        <div id="live-ticking-loss" class="live-counter-val font-mono">$0 COP</div>
+                        <div class="live-counter-sub">Cálculo oficial Concejo 2024 ($719.000.000 COP/día)</div>
+                    </div>
+
+                    <!-- Inspector de Estación en Vivo -->
+                    <div class="live-station-inspector">
+                        <div class="inspector-header">
+                            <span class="inspector-badge">ESTACIÓN ACTIVA</span>
+                            <span id="inspector-station-name" class="inspector-name">Portal Américas</span>
+                            <span id="inspector-station-state" class="badge-tag tag-critico">CRÍTICO</span>
+                        </div>
+                        
+                        <!-- Barra de Ocupación Dinámica -->
+                        <div class="occupancy-wrap">
+                            <div class="occupancy-labels">
+                                <span>Ocupación de Plataforma</span>
+                                <span id="inspector-occupancy-val" class="font-mono">88% (Saturación Alta)</span>
+                            </div>
+                            <div class="occupancy-bar-bg">
+                                <div id="inspector-occupancy-bar" class="occupancy-bar-fill" style="width: 88%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- ETA Próximos Buses -->
+                        <div class="live-etas-wrap">
+                            <div class="etas-title">Próximos buses en aproximación:</div>
+                            <div id="inspector-etas-list" class="etas-grid">
+                                <!-- Generado dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Feed de Eventos Operativos -->
+                    <div class="live-feed-box">
+                        <div class="feed-header">
+                            <span>BITÁCORA EN DIRECTO CCO</span>
+                            <span id="live-feed-pulse" class="feed-pulse">● VIVO</span>
+                        </div>
+                        <div id="live-feed-entries" class="feed-list">
+                            <!-- Entradas de bitácora en vivo -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Pestañas del Sidebar -->
                 <div class="sidebar-tabs">
                     <button class="sidebar-tab-btn active" data-tab="rankings">

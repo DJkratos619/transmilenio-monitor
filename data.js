@@ -2,7 +2,7 @@
 // SISTEMA DE MONITOREO Y GESTIÓN DE PÉRDIDAS - TRANSMILENIO BOGOTÁ
 // PROYECTO ACADÉMICO: EJECUCIÓN Y CONTROL DE PROYECTOS - ESEIT
 // Integrantes: Josué David Ospino Ramírez, David Fernando Pulido
-// Coordenadas Geográficas de Alta Precisión (GPS Oficial de Troncales y Estaciones)
+// Base de Datos Oficial, Trazados Viales de Alta Resolución y Rutas Curvas
 // ==============================================================================
 
 const ESEIT_PROYECTO_INFO = {
@@ -55,8 +55,7 @@ const TRONCALES_INFO = {
     'H': { nombre: 'Caracas Sur', color: '#0369a1', bgLight: '#e0f2fe', codigo: 'H' },
     'J': { nombre: 'Eje Ambiental', color: '#be185d', bgLight: '#fce7f3', codigo: 'J' },
     'K': { nombre: 'Calle 26 / El Dorado', color: '#b45309', bgLight: '#fef3c7', codigo: 'K' },
-    'L': { nombre: 'Carrera 10', color: '#0f766e', bgLight: '#ccfbf1', codigo: 'L' },
-    'M': { nombre: 'Carrera 7', color: '#475569', bgLight: '#f1f5f9', codigo: 'M' }
+    'L': { nombre: 'Carrera 10', color: '#0f766e', bgLight: '#ccfbf1', codigo: 'L' }
 };
 
 // ==============================================================================
@@ -78,6 +77,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 54,
         policiaActual: 8,
         policiaRequerida: 24,
+        ocupacionActual: 89,
         factores: { evasion: 1150000000, vandalismo: 380000000, bloqueos: 220000000, hurto: 70000000, fallasTecnicas: 30000000 },
         descripcionFactores: 'Evasión masiva por acceso peatonal sur, forzamiento de puertas en plataformas 1 y 2, y congestión severa en horas pico.',
         decisionesRecomendadas: [
@@ -103,6 +103,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 45,
         policiaActual: 3,
         policiaRequerida: 10,
+        ocupacionActual: 82,
         factores: { evasion: 670000000, vandalismo: 210000000, bloqueos: 60000000, hurto: 30000000, fallasTecnicas: 10000000 },
         descripcionFactores: 'Alta intrusión cruzando la Av. Ciudad de Cali hacia los vagones por falta de barreras perimetrales.',
         decisionesRecomendadas: [
@@ -124,6 +125,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 68,
         policiaActual: 3,
         policiaRequerida: 8,
+        ocupacionActual: 65,
         factores: { evasion: 450000000, vandalismo: 120000000, bloqueos: 60000000, hurto: 35000000, fallasTecnicas: 15000000 },
         descripcionFactores: 'Intrusión peatonal en puente de acceso y apertura forzada de puertas de vagón 1.',
         decisionesRecomendadas: [],
@@ -143,6 +145,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 60,
         policiaActual: 6,
         policiaRequerida: 18,
+        ocupacionActual: 91,
         factores: { evasion: 1020000000, vandalismo: 340000000, bloqueos: 150000000, hurto: 80000000, fallasTecnicas: 30000000 },
         descripcionFactores: 'Punto neurálgico de transbordo intermodal. Salto de torniquetes en puentes elevados y apertura manual de puertas.',
         decisionesRecomendadas: [
@@ -167,84 +170,9 @@ const ESTACIONES_DATA = [
         puertasOperativas: 82,
         policiaActual: 2,
         policiaRequerida: 4,
+        ocupacionActual: 45,
         factores: { evasion: 220000000, vandalismo: 60000000, bloqueos: 30000000, hurto: 20000000, fallasTecnicas: 10000000 },
         descripcionFactores: 'Estación con afluencia regular y tasa de evasión bajo el promedio distrital.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'f-marsella',
-        nombre: 'Marsella',
-        troncal: 'F',
-        coords: [4.6445, -74.1145],
-        esPortal: false,
-        pasajerosDia: 31000,
-        perdidasMensuales: 480000000,
-        tasaEvasion: 14.0,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 76,
-        policiaActual: 2,
-        policiaRequerida: 6,
-        factores: { evasion: 310000000, vandalismo: 85000000, bloqueos: 45000000, hurto: 25000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Operación regular en zona residencial y comercial de Américas.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'f-pradera',
-        nombre: 'Pradera',
-        troncal: 'F',
-        coords: [4.6455, -74.1080],
-        esPortal: false,
-        pasajerosDia: 27000,
-        perdidasMensuales: 390000000,
-        tasaEvasion: 13.5,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 80,
-        policiaActual: 2,
-        policiaRequerida: 4,
-        factores: { evasion: 260000000, vandalismo: 65000000, bloqueos: 35000000, hurto: 20000000, fallasTecnicas: 10000000 },
-        descripcionFactores: 'Demanda estable sobre Avenida de las Américas.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'f-distrito-grafiti',
-        nombre: 'Distrito Grafiti (Cra 53A)',
-        troncal: 'F',
-        coords: [4.6465, -74.1015],
-        esPortal: false,
-        pasajerosDia: 29000,
-        perdidasMensuales: 420000000,
-        tasaEvasion: 12.8,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 84,
-        policiaActual: 2,
-        policiaRequerida: 4,
-        factores: { evasion: 280000000, vandalismo: 75000000, bloqueos: 35000000, hurto: 20000000, fallasTecnicas: 10000000 },
-        descripcionFactores: 'Sector industrial de Puente Aranda con afluencia laboral.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'f-puente-aranda',
-        nombre: 'Puente Aranda',
-        troncal: 'F',
-        coords: [4.6475, -74.0950],
-        esPortal: false,
-        pasajerosDia: 34000,
-        perdidasMensuales: 520000000,
-        tasaEvasion: 15.0,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 72,
-        policiaActual: 3,
-        policiaRequerida: 6,
-        factores: { evasion: 340000000, vandalismo: 95000000, bloqueos: 45000000, hurto: 25000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Intercambio vehicular de la Carrera 50 con Américas.',
         decisionesRecomendadas: [],
         rutasAlternas: []
     },
@@ -264,6 +192,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 68,
         policiaActual: 5,
         policiaRequerida: 12,
+        ocupacionActual: 78,
         factores: { evasion: 790000000, vandalismo: 320000000, bloqueos: 160000000, hurto: 55000000, fallasTecnicas: 25000000 },
         descripcionFactores: 'Intersección Caracas con Autonorte y Calle 80. Frecuente punto de marchas ciudadanas.',
         decisionesRecomendadas: [],
@@ -283,6 +212,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 58,
         policiaActual: 4,
         policiaRequerida: 14,
+        ocupacionActual: 86,
         factores: { evasion: 890000000, vandalismo: 310000000, bloqueos: 190000000, hurto: 65000000, fallasTecnicas: 25000000 },
         descripcionFactores: 'Intercambio con Calle 80. Cuello de botella severo en torniquetes en horas pico.',
         decisionesRecomendadas: [
@@ -304,6 +234,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 48,
         policiaActual: 4,
         policiaRequerida: 16,
+        ocupacionActual: 94,
         factores: { evasion: 940000000, vandalismo: 410000000, bloqueos: 260000000, hurto: 85000000, fallasTecnicas: 25000000 },
         descripcionFactores: 'Zona universitaria y financiera. Daños recurrentes por manifestaciones en puertas de vidrio y validadores.',
         decisionesRecomendadas: [
@@ -313,25 +244,6 @@ const ESTACIONES_DATA = [
         rutasAlternas: [
             { nombre: 'Desvío Troncal por Carrera 10 / NQS', descripcion: 'Transferir biarticulados por Calle 80 hacia NQS si Caracas está bloqueada.' }
         ]
-    },
-    {
-        id: 'a-calle-63',
-        nombre: 'Calle 63',
-        troncal: 'A',
-        coords: [4.6476, -74.0694],
-        esPortal: false,
-        pasajerosDia: 48000,
-        perdidasMensuales: 750000000,
-        tasaEvasion: 16.5,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 66,
-        policiaActual: 3,
-        policiaRequerida: 8,
-        factores: { evasion: 480000000, vandalismo: 140000000, bloqueos: 75000000, hurto: 35000000, fallasTecnicas: 20000000 },
-        descripcionFactores: 'Sector comercial de Chapinero. Salto de torniquete en accesos laterales.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
     },
     {
         id: 'a-marly',
@@ -347,46 +259,9 @@ const ESTACIONES_DATA = [
         puertasOperativas: 62,
         policiaActual: 3,
         policiaRequerida: 8,
+        ocupacionActual: 70,
         factores: { evasion: 610000000, vandalismo: 180000000, bloqueos: 75000000, hurto: 40000000, fallasTecnicas: 15000000 },
         descripcionFactores: 'Sector hospitalario y universitario. Evasión por rampas de acceso peatonal.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'a-calle-45',
-        nombre: 'Calle 45',
-        troncal: 'A',
-        coords: [4.6310, -74.0768],
-        esPortal: false,
-        pasajerosDia: 54000,
-        perdidasMensuales: 960000000,
-        tasaEvasion: 19.2,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 60,
-        policiaActual: 3,
-        policiaRequerida: 10,
-        factores: { evasion: 620000000, vandalismo: 190000000, bloqueos: 85000000, hurto: 45000000, fallasTecnicas: 20000000 },
-        descripcionFactores: 'Conexión con campus universitarios de Chapinero y Teusaquillo.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'a-calle-26',
-        nombre: 'Calle 26 (Caracas)',
-        troncal: 'A',
-        coords: [4.6171, -74.0838],
-        esPortal: false,
-        pasajerosDia: 41000,
-        perdidasMensuales: 810000000,
-        tasaEvasion: 19.5,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 54,
-        policiaActual: 3,
-        policiaRequerida: 8,
-        factores: { evasion: 550000000, vandalismo: 150000000, bloqueos: 60000000, hurto: 35000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Cruce estratégico con el viaducto de la Avenida El Dorado.',
         decisionesRecomendadas: [],
         rutasAlternas: []
     },
@@ -404,6 +279,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 40,
         policiaActual: 8,
         policiaRequerida: 26,
+        ocupacionActual: 96,
         factores: { evasion: 1180000000, vandalismo: 420000000, bloqueos: 180000000, hurto: 95000000, fallasTecnicas: 35000000 },
         descripcionFactores: 'Mayor nodo de transbordo del centro histórico. Conecta Caracas, Américas y Eje Ambiental.',
         decisionesRecomendadas: [
@@ -413,25 +289,6 @@ const ESTACIONES_DATA = [
         rutasAlternas: [
             { nombre: 'Conexión Bicentenario por Carrera 10', descripcion: 'Desviar pasajeros destino sur a Bicentenario para descongestionar Jiménez.' }
         ]
-    },
-    {
-        id: 'a-tercer-milenio',
-        nombre: 'Tercer Milenio',
-        troncal: 'A',
-        coords: [4.5960, -74.0935],
-        esPortal: false,
-        pasajerosDia: 32000,
-        perdidasMensuales: 790000000,
-        tasaEvasion: 24.0,
-        estado: 'critico',
-        nivelRiesgo: 'Muy Alto',
-        puertasOperativas: 42,
-        policiaActual: 3,
-        policiaRequerida: 12,
-        factores: { evasion: 520000000, vandalismo: 180000000, bloqueos: 40000000, hurto: 35000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Entorno de alta complejidad social cerca al Parque Tercer Milenio.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
     },
 
     // ---------------- TRONCAL E: NQS CENTRAL ----------------
@@ -449,6 +306,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 88,
         policiaActual: 4,
         policiaRequerida: 6,
+        ocupacionActual: 55,
         factores: { evasion: 380000000, vandalismo: 120000000, bloqueos: 60000000, hurto: 40000000, fallasTecnicas: 20000000 },
         descripcionFactores: 'Sede gubernamental distrital con vigilancia activa y afluencia de trabajadores.',
         decisionesRecomendadas: [],
@@ -468,6 +326,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 52,
         policiaActual: 8,
         policiaRequerida: 28,
+        ocupacionActual: 95,
         factores: { evasion: 1240000000, vandalismo: 440000000, bloqueos: 160000000, hurto: 100000000, fallasTecnicas: 40000000 },
         descripcionFactores: 'El túnel peatonal más transitado del sistema. Informalidad, salto masivo de torniquetes y puntos ciegos.',
         decisionesRecomendadas: [
@@ -477,25 +336,6 @@ const ESTACIONES_DATA = [
         rutasAlternas: [
             { nombre: 'Transbordo Alterno Paloquemao - Comuneros', descripcion: 'Sugerir transbordo en Paloquemao para aliviar el túnel central de Ricaurte.' }
         ]
-    },
-    {
-        id: 'e-comuneros',
-        nombre: 'Comuneros',
-        troncal: 'E',
-        coords: [4.6080, -74.1060],
-        esPortal: false,
-        pasajerosDia: 31000,
-        perdidasMensuales: 650000000,
-        tasaEvasion: 22.0,
-        estado: 'alerta',
-        nivelRiesgo: 'Alto',
-        puertasOperativas: 58,
-        policiaActual: 2,
-        policiaRequerida: 8,
-        factores: { evasion: 440000000, vandalismo: 130000000, bloqueos: 45000000, hurto: 25000000, fallasTecnicas: 10000000 },
-        descripcionFactores: 'Salto constante de torniquetes y forzado de puertas en horas valle.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
     },
 
     // ---------------- TRONCAL B: AUTOPISTA NORTE ----------------
@@ -513,49 +353,12 @@ const ESTACIONES_DATA = [
         puertasOperativas: 75,
         policiaActual: 8,
         policiaRequerida: 20,
+        ocupacionActual: 84,
         factores: { evasion: 890000000, vandalismo: 280000000, bloqueos: 150000000, hurto: 70000000, fallasTecnicas: 30000000 },
         descripcionFactores: 'Pasajeros de la Sabana Norte (Chía, Zipaquirá). Evasión focalizada en bahías intermunicipales.',
         decisionesRecomendadas: [
             { id: 'gate-b-norte', tipo: 'infraestructura', titulo: 'Control Integrado en Bahía Intermunicipal', impactoEsperado: '-40% evasión en transbordo', costoEst: '$110M', estado: 'pendiente' }
         ],
-        rutasAlternas: []
-    },
-    {
-        id: 'b-toberin',
-        nombre: 'Toberín',
-        troncal: 'B',
-        coords: [4.7430, -74.0475],
-        esPortal: false,
-        pasajerosDia: 46000,
-        perdidasMensuales: 620000000,
-        tasaEvasion: 13.5,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 82,
-        policiaActual: 3,
-        policiaRequerida: 6,
-        factores: { evasion: 410000000, vandalismo: 110000000, bloqueos: 50000000, hurto: 35000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Estación amplia de Autonorte con puertas automáticas operativas.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'b-calle-100',
-        nombre: 'Calle 100',
-        troncal: 'B',
-        coords: [4.6850, -74.0570],
-        esPortal: false,
-        pasajerosDia: 82000,
-        perdidasMensuales: 1190000000,
-        tasaEvasion: 16.5,
-        estado: 'alerta',
-        nivelRiesgo: 'Alto',
-        puertasOperativas: 70,
-        policiaActual: 4,
-        policiaRequerida: 14,
-        factores: { evasion: 750000000, vandalismo: 220000000, bloqueos: 120000000, hurto: 75000000, fallasTecnicas: 25000000 },
-        descripcionFactores: 'Gran nodo financiero. Congestión en puentes peatonales de acceso sobre la Autonorte.',
-        decisionesRecomendadas: [],
         rutasAlternas: []
     },
 
@@ -574,6 +377,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 58,
         policiaActual: 6,
         policiaRequerida: 20,
+        ocupacionActual: 88,
         factores: { evasion: 990000000, vandalismo: 320000000, bloqueos: 170000000, hurto: 75000000, fallasTecnicas: 35000000 },
         descripcionFactores: 'Aglomeración masiva en alimentadores barriales. Evasión por plataformas abiertas.',
         decisionesRecomendadas: [
@@ -581,42 +385,74 @@ const ESTACIONES_DATA = [
         ],
         rutasAlternas: []
     },
+
+    // ---------------- TRONCAL H: CARACAS SUR (TUNAL / USME) ----------------
     {
-        id: 'c-21-angeles',
-        nombre: '21 Ángeles',
-        troncal: 'C',
-        coords: [4.7210, -74.0820],
-        esPortal: false,
-        pasajerosDia: 29000,
-        perdidasMensuales: 510000000,
-        tasaEvasion: 17.5,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 68,
-        policiaActual: 2,
-        policiaRequerida: 6,
-        factores: { evasion: 340000000, vandalismo: 95000000, bloqueos: 45000000, hurto: 20000000, fallasTecnicas: 10000000 },
-        descripcionFactores: 'Ubicada en la curva de subida del cerro de Suba con pendiente pronunciada.',
-        decisionesRecomendadas: [],
+        id: 'h-portal-tunal',
+        nombre: 'Portal Tunal',
+        troncal: 'H',
+        coords: [4.5710, -74.1360],
+        esPortal: true,
+        pasajerosDia: 85000,
+        perdidasMensuales: 1680000000,
+        tasaEvasion: 22.0,
+        estado: 'critico',
+        nivelRiesgo: 'Muy Alto',
+        puertasOperativas: 50,
+        policiaActual: 6,
+        policiaRequerida: 22,
+        ocupacionActual: 90,
+        factores: { evasion: 1080000000, vandalismo: 360000000, bloqueos: 140000000, hurto: 65000000, fallasTecnicas: 35000000 },
+        descripcionFactores: 'Articulación con TransMiCable hacia Ciudad Bolívar. Evasión en transbordo peatonal y torniquetes sobrepasados.',
+        decisionesRecomendadas: [
+            { id: 'pol-h-tunal', tipo: 'seguridad', titulo: 'Dispositivo Mixto Policía + Gestores en Enlace Cable', impactoEsperado: '-40% evasión en transbordo', costoEst: '$42M/mes', estado: 'pendiente' }
+        ],
         rutasAlternas: []
     },
     {
-        id: 'c-suba-boyaca',
-        nombre: 'Suba - Av. Boyacá',
-        troncal: 'C',
-        coords: [4.7040, -74.0725],
-        esPortal: false,
-        pasajerosDia: 48000,
-        perdidasMensuales: 720000000,
-        tasaEvasion: 16.0,
-        estado: 'alerta',
-        nivelRiesgo: 'Medio',
-        puertasOperativas: 72,
-        policiaActual: 3,
-        policiaRequerida: 8,
-        factores: { evasion: 480000000, vandalismo: 135000000, bloqueos: 55000000, hurto: 35000000, fallasTecnicas: 15000000 },
-        descripcionFactores: 'Punto de conexión de Suba con la Avenida Boyacá.',
-        decisionesRecomendadas: [],
+        id: 'h-portal-usme',
+        nombre: 'Portal Usme',
+        troncal: 'H',
+        coords: [4.5360, -74.1170],
+        esPortal: true,
+        pasajerosDia: 76000,
+        perdidasMensuales: 1530000000,
+        tasaEvasion: 23.1,
+        estado: 'critico',
+        nivelRiesgo: 'Muy Alto',
+        puertasOperativas: 46,
+        policiaActual: 5,
+        policiaRequerida: 18,
+        ocupacionActual: 87,
+        factores: { evasion: 1010000000, vandalismo: 310000000, bloqueos: 135000000, hurto: 45000000, fallasTecnicas: 30000000 },
+        descripcionFactores: 'Extremo sur de Bogotá. Bloqueos frecuentes en acceso a la vía al Llano.',
+        decisionesRecomendadas: [
+            { id: 'pol-h-usme', tipo: 'seguridad', titulo: 'Control Estratégico en Bahías Alimentadoras', impactoEsperado: '-35% evasión', costoEst: '$34M/mes', estado: 'pendiente' }
+        ],
+        rutasAlternas: []
+    },
+
+    // ---------------- TRONCAL G: NQS SUR ----------------
+    {
+        id: 'g-portal-sur',
+        nombre: 'Portal Sur (JFK)',
+        troncal: 'G',
+        coords: [4.5960, -74.1680],
+        esPortal: true,
+        pasajerosDia: 92000,
+        perdidasMensuales: 1540000000,
+        tasaEvasion: 19.6,
+        estado: 'critico',
+        nivelRiesgo: 'Muy Alto',
+        puertasOperativas: 60,
+        policiaActual: 8,
+        policiaRequerida: 22,
+        ocupacionActual: 89,
+        factores: { evasion: 980000000, vandalismo: 330000000, bloqueos: 140000000, hurto: 60000000, fallasTecnicas: 30000000 },
+        descripcionFactores: 'Recepción del flujo masivo de Soacha y alimentadores de Bosa y Perdomo.',
+        decisionesRecomendadas: [
+            { id: 'pol-g-sur', tipo: 'seguridad', titulo: 'Comando Móvil en Enlace Soacha - Bogotá', impactoEsperado: '-35% evasión perimetral', costoEst: '$40M/mes', estado: 'pendiente' }
+        ],
         rutasAlternas: []
     },
 
@@ -635,27 +471,9 @@ const ESTACIONES_DATA = [
         puertasOperativas: 64,
         policiaActual: 6,
         policiaRequerida: 18,
+        ocupacionActual: 81,
         factores: { evasion: 910000000, vandalismo: 290000000, bloqueos: 160000000, hurto: 75000000, fallasTecnicas: 35000000 },
         descripcionFactores: 'Entrada del occidente de Cundinamarca (Mosquera, Funza, Madrid). Sobrecarga matutina.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'd-escuela-militar',
-        nombre: 'Escuela Militar',
-        troncal: 'D',
-        coords: [4.6635, -74.0640],
-        esPortal: false,
-        pasajerosDia: 58000,
-        perdidasMensuales: 690000000,
-        tasaEvasion: 12.0,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 88,
-        policiaActual: 4,
-        policiaRequerida: 8,
-        factores: { evasion: 450000000, vandalismo: 120000000, bloqueos: 65000000, hurto: 35000000, fallasTecnicas: 20000000 },
-        descripcionFactores: 'Intercambiador Troncal Calle 80 con NQS. Vigilancia activa.',
         decisionesRecomendadas: [],
         rutasAlternas: []
     },
@@ -675,133 +493,10 @@ const ESTACIONES_DATA = [
         puertasOperativas: 82,
         policiaActual: 8,
         policiaRequerida: 16,
+        ocupacionActual: 62,
         factores: { evasion: 710000000, vandalismo: 220000000, bloqueos: 110000000, hurto: 80000000, fallasTecnicas: 30000000 },
         descripcionFactores: 'Conexión con el Aeropuerto Internacional El Dorado y Fontibón.',
         decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'k-salitre-el-greco',
-        nombre: 'Salitre - El Greco',
-        troncal: 'K',
-        coords: [4.6540, -74.0990],
-        esPortal: false,
-        pasajerosDia: 38000,
-        perdidasMensuales: 420000000,
-        tasaEvasion: 10.5,
-        estado: 'normal',
-        nivelRiesgo: 'Bajo',
-        puertasOperativas: 92,
-        policiaActual: 2,
-        policiaRequerida: 4,
-        factores: { evasion: 280000000, vandalismo: 70000000, bloqueos: 35000000, hurto: 25000000, fallasTecnicas: 10000000 },
-        descripcionFactores: 'Sector hotelero y empresarial de la Avenida El Dorado.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-
-    // ---------------- TRONCAL H: CARACAS SUR (TUNAL / USME) ----------------
-    {
-        id: 'h-portal-tunal',
-        nombre: 'Portal Tunal',
-        troncal: 'H',
-        coords: [4.5710, -74.1360],
-        esPortal: true,
-        pasajerosDia: 85000,
-        perdidasMensuales: 1680000000,
-        tasaEvasion: 22.0,
-        estado: 'critico',
-        nivelRiesgo: 'Muy Alto',
-        puertasOperativas: 50,
-        policiaActual: 6,
-        policiaRequerida: 22,
-        factores: { evasion: 1080000000, vandalismo: 360000000, bloqueos: 140000000, hurto: 65000000, fallasTecnicas: 35000000 },
-        descripcionFactores: 'Articulación con TransMiCable hacia Ciudad Bolívar. Evasión en transbordo peatonal y torniquetes sobrepasados.',
-        decisionesRecomendadas: [
-            { id: 'pol-h-tunal', tipo: 'seguridad', titulo: 'Dispositivo Mixto Policía + Gestores en Enlace Cable', impactoEsperado: '-40% evasión en transbordo', costoEst: '$42M/mes', estado: 'pendiente' }
-        ],
-        rutasAlternas: []
-    },
-    {
-        id: 'h-molinos',
-        nombre: 'Molinos',
-        troncal: 'H',
-        coords: [4.5535, -74.1150],
-        esPortal: false,
-        pasajerosDia: 52000,
-        perdidasMensuales: 1180000000,
-        tasaEvasion: 23.5,
-        estado: 'critico',
-        nivelRiesgo: 'Alto',
-        puertasOperativas: 54,
-        policiaActual: 4,
-        policiaRequerida: 12,
-        factores: { evasion: 760000000, vandalismo: 250000000, bloqueos: 105000000, hurto: 45000000, fallasTecnicas: 20000000 },
-        descripcionFactores: 'Gran afluencia por barrios del suroriente. Torniquetes de acceso sobrepasados.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'h-portal-usme',
-        nombre: 'Portal Usme',
-        troncal: 'H',
-        coords: [4.5360, -74.1170],
-        esPortal: true,
-        pasajerosDia: 76000,
-        perdidasMensuales: 1530000000,
-        tasaEvasion: 23.1,
-        estado: 'critico',
-        nivelRiesgo: 'Muy Alto',
-        puertasOperativas: 46,
-        policiaActual: 5,
-        policiaRequerida: 18,
-        factores: { evasion: 1010000000, vandalismo: 310000000, bloqueos: 135000000, hurto: 45000000, fallasTecnicas: 30000000 },
-        descripcionFactores: 'Extremo sur de Bogotá. Bloqueos frecuentes en acceso a la vía al Llano.',
-        decisionesRecomendadas: [
-            { id: 'pol-h-usme', tipo: 'seguridad', titulo: 'Control Estratégico en Bahías Alimentadoras', impactoEsperado: '-35% evasión', costoEst: '$34M/mes', estado: 'pendiente' }
-        ],
-        rutasAlternas: []
-    },
-
-    // ---------------- TRONCAL G: NQS SUR ----------------
-    {
-        id: 'g-general-santander',
-        nombre: 'General Santander',
-        troncal: 'G',
-        coords: [4.5930, -74.1370],
-        esPortal: false,
-        pasajerosDia: 64000,
-        perdidasMensuales: 1120000000,
-        tasaEvasion: 19.5,
-        estado: 'alerta',
-        nivelRiesgo: 'Alto',
-        puertasOperativas: 64,
-        policiaActual: 5,
-        policiaRequerida: 14,
-        factores: { evasion: 710000000, vandalismo: 240000000, bloqueos: 95000000, hurto: 50000000, fallasTecnicas: 25000000 },
-        descripcionFactores: 'Conexión con alimentadores y rutas interurbanas hacia Soacha.',
-        decisionesRecomendadas: [],
-        rutasAlternas: []
-    },
-    {
-        id: 'g-portal-sur',
-        nombre: 'Portal Sur (JFK)',
-        troncal: 'G',
-        coords: [4.5960, -74.1680],
-        esPortal: true,
-        pasajerosDia: 92000,
-        perdidasMensuales: 1540000000,
-        tasaEvasion: 19.6,
-        estado: 'critico',
-        nivelRiesgo: 'Muy Alto',
-        puertasOperativas: 60,
-        policiaActual: 8,
-        policiaRequerida: 22,
-        factores: { evasion: 980000000, vandalismo: 330000000, bloqueos: 140000000, hurto: 60000000, fallasTecnicas: 30000000 },
-        descripcionFactores: 'Recepción del flujo masivo de Soacha y alimentadores de Bosa y Perdomo.',
-        decisionesRecomendadas: [
-            { id: 'pol-g-sur', tipo: 'seguridad', titulo: 'Comando Móvil en Enlace Soacha - Bogotá', impactoEsperado: '-35% evasión perimetral', costoEst: '$40M/mes', estado: 'pendiente' }
-        ],
         rutasAlternas: []
     },
 
@@ -820,6 +515,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 52,
         policiaActual: 5,
         policiaRequerida: 18,
+        ocupacionActual: 93,
         factores: { evasion: 880000000, vandalismo: 280000000, bloqueos: 110000000, hurto: 85000000, fallasTecnicas: 35000000 },
         descripcionFactores: 'Comercio mayorista del Madrugón. Densidad extrema, comercio informal y saltos reiterados.',
         decisionesRecomendadas: [
@@ -841,6 +537,7 @@ const ESTACIONES_DATA = [
         puertasOperativas: 68,
         policiaActual: 6,
         policiaRequerida: 16,
+        ocupacionActual: 79,
         factores: { evasion: 820000000, vandalismo: 260000000, bloqueos: 110000000, hurto: 60000000, fallasTecnicas: 30000000 },
         descripcionFactores: 'Demanda del suroriente sobre la Carrera Décima.',
         decisionesRecomendadas: [],
@@ -881,7 +578,6 @@ const CORREDORES_TRONCALES = [
             [4.5740, -74.1090], // Restrepo
             [4.5705, -74.1122], // Olaya
             [4.5640, -74.1172], // Calle 40 Sur
-            // Ramal a Tunal por Av Villavicencio
             [4.5685, -74.1240], // Santa Lucía
             [4.5700, -74.1305], // Biblioteca Tunal
             [4.5710, -74.1360]  // Portal Tunal
@@ -932,7 +628,7 @@ const CORREDORES_TRONCALES = [
             [4.7480, -74.0945], // Portal Suba
             [4.7405, -74.0920], // La Campiña
             [4.7330, -74.0880], // Suba Tv 91
-            [4.7210, -74.0820], // 21 Ángeles (curva cerro de suba)
+            [4.7210, -74.0820], // 21 Ángeles
             [4.7130, -74.0770], // Gratamira
             [4.7040, -74.0725], // Suba Av Boyacá
             [4.6980, -74.0685], // Niza Calle 127
@@ -1060,22 +756,13 @@ const CORREDORES_TRONCALES = [
             [4.5680, -74.0925], // Country Sur
             [4.5660, -74.0930]  // Portal 20 de Julio
         ]
-    },
-    {
-        codigo: 'Eje-Ambiental',
-        troncal: 'J',
-        color: '#be185d',
-        ancho: 4,
-        coordenadas: [
-            [4.6060, -74.0670], // Universidades
-            [4.6015, -74.0675], // Las Aguas
-            [4.6018, -74.0725], // Museo del Oro
-            [4.6025, -74.0905]  // Av Jiménez
-        ]
     }
 ];
 
-// Rutas Operativas y Desvíos
+// ==============================================================================
+// RUTAS OPERATIVAS CON POLILÍNEAS DETALLADAS PARA NAVEGACIÓN REAL DE BUSES
+// Trazados de alta precisión que siguen las calzadas troncales de Bogotá
+// ==============================================================================
 const RUTAS_SISTEMA = [
     {
         id: 'ruta-f19',
@@ -1085,7 +772,43 @@ const RUTAS_SISTEMA = [
         color: '#dc2626',
         frecuenciaMin: 4,
         flotaAsignada: 28,
-        paradasIds: ['b-portal-norte', 'a-calle-72', 'a-av-jimenez', 'f-banderas', 'f-portal-americas'],
+        trayectoriaGPS: [
+            [4.7550, -74.0450], // Portal Norte
+            [4.7430, -74.0475], // Toberín
+            [4.7340, -74.0500], // Cardio Infantil
+            [4.7260, -74.0515], // Mazurén
+            [4.7170, -74.0535], // Calle 146
+            [4.7040, -74.0558], // Alcalá
+            [4.6960, -74.0570], // Prado
+            [4.6850, -74.0570], // Calle 100
+            [4.6730, -74.0588], // Virrey
+            [4.6672, -74.0592], // Héroes
+            [4.6625, -74.0620], // Calle 76
+            [4.6575, -74.0645], // Calle 72
+            [4.6528, -74.0668], // Flores
+            [4.6476, -74.0694], // Calle 63
+            [4.6421, -74.0720], // Calle 57
+            [4.6360, -74.0745], // Marly
+            [4.6310, -74.0768], // Calle 45
+            [4.6220, -74.0814], // Calle 34
+            [4.6171, -74.0838], // Calle 26
+            [4.6075, -74.0885], // Calle 19
+            [4.6025, -74.0905], // Av Jiménez
+            [4.6070, -74.0980], // Ricaurte
+            [4.6485, -74.0890], // Carrera 43
+            [4.6475, -74.0950], // Puente Aranda
+            [4.6465, -74.1015], // Distrito Grafiti
+            [4.6455, -74.1080], // Pradera
+            [4.6445, -74.1145], // Marsella
+            [4.6435, -74.1220], // Mundo Aventura
+            [4.6425, -74.1290], // Mandalay
+            [4.6415, -74.1360], // Banderas
+            [4.6395, -74.1435], // Transversal 86
+            [4.6375, -74.1510], // Biblioteca Tintal
+            [4.6335, -74.1590], // Patio Bonito
+            [4.6295, -74.1685]  // Portal Américas
+        ],
+        paradasIds: ['b-portal-norte', 'a-heroes', 'a-calle-72', 'a-av-jimenez', 'f-ricaurte', 'f-banderas', 'f-portal-americas'],
         desvíoAlterno: {
             activo: false,
             nombre: 'Desvío Expreso Américas - NQS',
@@ -1109,7 +832,34 @@ const RUTAS_SISTEMA = [
         color: '#0369a1',
         frecuenciaMin: 5,
         flotaAsignada: 24,
-        paradasIds: ['b-portal-norte', 'a-calle-76', 'a-av-jimenez', 'h-portal-tunal'],
+        trayectoriaGPS: [
+            [4.7550, -74.0450], // Portal Norte
+            [4.7430, -74.0475], // Toberín
+            [4.7260, -74.0515], // Mazurén
+            [4.7040, -74.0558], // Alcalá
+            [4.6850, -74.0570], // Calle 100
+            [4.6672, -74.0592], // Héroes
+            [4.6625, -74.0620], // Calle 76
+            [4.6575, -74.0645], // Calle 72
+            [4.6476, -74.0694], // Calle 63
+            [4.6360, -74.0745], // Marly
+            [4.6264, -74.0792], // Av 39
+            [4.6171, -74.0838], // Calle 26
+            [4.6075, -74.0885], // Calle 19
+            [4.6025, -74.0905], // Av Jiménez
+            [4.5960, -74.0935], // Tercer Milenio
+            [4.5910, -74.0965], // Hospital
+            [4.5862, -74.0998], // Hortúa
+            [4.5820, -74.1028], // Nariño
+            [4.5778, -74.1058], // Fucha
+            [4.5740, -74.1090], // Restrepo
+            [4.5705, -74.1122], // Olaya
+            [4.5640, -74.1172], // Calle 40 Sur
+            [4.5685, -74.1240], // Santa Lucía
+            [4.5700, -74.1305], // Biblioteca Tunal
+            [4.5710, -74.1360]  // Portal Tunal
+        ],
+        paradasIds: ['b-portal-norte', 'a-calle-76', 'a-calle-72', 'a-av-jimenez', 'a-tercer-milenio', 'h-portal-tunal'],
         desvíoAlterno: {
             activo: false,
             nombre: 'Desvío Caracas Sur por Carrera 10',
@@ -1131,7 +881,32 @@ const RUTAS_SISTEMA = [
         color: '#0f766e',
         frecuenciaMin: 6,
         flotaAsignada: 18,
-        paradasIds: ['k-portal-eldorado', 'a-av-jimenez', 'l-san-victorino', 'l-portal-20-julio'],
+        trayectoriaGPS: [
+            [4.6850, -74.1370], // Portal Eldorado
+            [4.6780, -74.1280], // Modelia
+            [4.6720, -74.1200], // Normandía
+            [4.6660, -74.1130], // Av Rojas
+            [4.6600, -74.1060], // Maloka
+            [4.6540, -74.0990], // Salitre El Greco
+            [4.6480, -74.0920], // CAN
+            [4.6430, -74.0860], // Gobernación
+            [4.6380, -74.0820], // Quinta Paredes
+            [4.6330, -74.0780], // Corferias
+            [4.6290, -74.0740], // Ciudad Universitaria
+            [4.6230, -74.0690], // Plaza Democracia
+            [4.6180, -74.0650], // Centro Memoria
+            [4.6140, -74.0685], // San Diego
+            [4.6070, -74.0720], // Las Nieves
+            [4.6000, -74.0770], // San Victorino
+            [4.5920, -74.0815], // Bicentenario
+            [4.5870, -74.0850], // Hospital San Juan de Dios
+            [4.5810, -74.0880], // Policarpa
+            [4.5760, -74.0900], // Ciudad Jardín
+            [4.5710, -74.0915], // 1 de Mayo
+            [4.5680, -74.0925], // Country Sur
+            [4.5660, -74.0930]  // Portal 20 de Julio
+        ],
+        paradasIds: ['k-portal-eldorado', 'l-san-victorino', 'l-portal-20-julio'],
         desvíoAlterno: {
             activo: false,
             nombre: 'Desvío K10 por Américas',
@@ -1139,11 +914,82 @@ const RUTAS_SISTEMA = [
             enlace: 'Enlace por Carrera 30 hacia Comuneros',
             coordenadas: [
                 [4.6850, -74.1370],
-                [4.6290, -74.0890],
                 [4.6070, -74.0980],
                 [4.5660, -74.0930]
             ]
         }
+    },
+    {
+        id: 'ruta-c15',
+        nombre: 'C15 / H15',
+        origen: 'Portal Suba',
+        destino: 'Portal Tunal',
+        color: '#ca8a04',
+        frecuenciaMin: 5,
+        flotaAsignada: 22,
+        trayectoriaGPS: [
+            [4.7480, -74.0945], // Portal Suba
+            [4.7405, -74.0920], // La Campiña
+            [4.7330, -74.0880], // Suba Tv 91
+            [4.7210, -74.0820], // 21 Ángeles
+            [4.7130, -74.0770], // Gratamira
+            [4.7040, -74.0725], // Suba Av Boyacá
+            [4.6980, -74.0685], // Niza Calle 127
+            [4.6860, -74.0635], // Av Suba Calle 116
+            [4.6800, -74.0620], // Puente Largo
+            [4.6730, -74.0605], // Suba Calle 100
+            [4.6640, -74.0594], // San Martín
+            [4.6635, -74.0640], // Escuela Militar
+            [4.6510, -74.0760], // Simón Bolívar
+            [4.6410, -74.0840], // Campín
+            [4.6360, -74.0870], // U Nacional
+            [4.6290, -74.0890], // CAD
+            [4.6190, -74.0930], // Paloquemao
+            [4.6070, -74.0980], // Ricaurte
+            [4.6040, -74.1130], // Santa Isabel
+            [4.5980, -74.1270], // SENA
+            [4.5930, -74.1370], // General Santander
+            [4.5740, -74.1090], // Restrepo
+            [4.5685, -74.1240], // Santa Lucía
+            [4.5710, -74.1360]  // Portal Tunal
+        ],
+        paradasIds: ['c-portal-suba', 'e-escuela-militar', 'f-ricaurte', 'h-portal-tunal'],
+        desvíoAlterno: null
+    },
+    {
+        id: 'ruta-d20',
+        nombre: 'D20 / H20',
+        origen: 'Portal 80',
+        destino: 'Portal Usme',
+        color: '#7e22ce',
+        frecuenciaMin: 5,
+        flotaAsignada: 20,
+        trayectoriaGPS: [
+            [4.7095, -74.1130], // Portal 80
+            [4.7030, -74.1060], // Quirigua
+            [4.6985, -74.1010], // Carrera 90
+            [4.6910, -74.0925], // Granja Cra 77
+            [4.6870, -74.0875], // Minuto de Dios
+            [4.6780, -74.0785], // Ferias
+            [4.6740, -74.0740], // Av 68
+            [4.6635, -74.0640], // Escuela Militar
+            [4.6610, -74.0610], // Polo
+            [4.6672, -74.0592], // Héroes
+            [4.6625, -74.0620], // Calle 76
+            [4.6575, -74.0645], // Calle 72
+            [4.6476, -74.0694], // Calle 63
+            [4.6360, -74.0745], // Marly
+            [4.6171, -74.0838], // Calle 26
+            [4.6025, -74.0905], // Av Jiménez
+            [4.5960, -74.0935], // Tercer Milenio
+            [4.5740, -74.1090], // Restrepo
+            [4.5640, -74.1172], // Calle 40 Sur
+            [4.5580, -74.1158], // Socorro
+            [4.5535, -74.1150], // Molinos
+            [4.5360, -74.1170]  // Portal Usme
+        ],
+        paradasIds: ['d-portal-80', 'a-calle-72', 'a-av-jimenez', 'h-portal-usme'],
+        desvíoAlterno: null
     }
 ];
 

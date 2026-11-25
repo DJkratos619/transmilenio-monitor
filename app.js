@@ -7,11 +7,12 @@ class TransMilenioApp {
     constructor() {
         this.estaciones = JSON.parse(JSON.stringify(ESTACIONES_DATA));
         this.rutas = JSON.parse(JSON.stringify(RUTAS_SISTEMA));
-        this.selectedStation = null;
+        this.selectedStation = this.estaciones.find(e => e.id === 'f-portal-americas') || this.estaciones[0];
         this.decisionesEjecutadas = [];
         this.simSpeed = 1;
         this.isSimRunning = true;
         this.simTickCount = 0;
+        this.liveLossTodayCOP = 485120000; // Línea base en vivo acumulada en el día
 
         // Inicializar mapa geoespacial nativo
         this.tmMap = new TransMilenioMap('map-container', {
@@ -26,7 +27,8 @@ class TransMilenioApp {
         this.renderNativeCharts();
         this.renderEseitRiskMatrix();
         this.initEventListeners();
-        this.startLiveSimulation();
+        this.startLiveTelemetry();
+        this.updateLiveStationInspector();
     }
 
     initDOM() {
@@ -271,6 +273,7 @@ class TransMilenioApp {
         if (!st) return;
 
         this.selectedStation = st;
+        this.updateLiveStationInspector();
         const modal = document.getElementById('station-modal');
         if (!modal) return;
 
@@ -608,24 +611,147 @@ class TransMilenioApp {
         });
     }
 
-    startLiveSimulation() {
-        const msgs = [
-            'Intrusión irregular detectada en torniquetes norte de Portal Américas.',
-            'Dispositivo policial disuade con éxito intento de bloqueo en Av. Jiménez.',
-            'Ruta alterna K10 descongestiona corredor Calle 26 en 14 minutos.',
-            'Cuadrilla de mantenimiento preventivo operando puertas en Calle 72.'
-        ];
+    updateLiveStationInspector() {
+        const st = this.selectedStation || this.estaciones[0];
+        if (!st) return;
 
+        const nameEl = document.getElementById('inspector-station-name');
+        if (nameEl) nameEl.textContent = st.nombre;
+
+        const stateEl = document.getElementById('inspector-station-state');
+        if (stateEl) {
+            stateEl.className = `badge-tag tag-${st.estado}`;
+            stateEl.textContent = st.estado.toUpperCase();
+        }
+
+        // Variación fluida y viva de ocupación de plataforma
+        const wave = Math.sin(Date.now() / 2400) * 3;
+        const currentOcc = Math.max(15, Math.min(98, Math.round(st.ocupacionActual + wave)));
+
+        const occVal = document.getElementById('inspector-occupancy-val');
+        if (occVal) {
+            let label = 'Flujo Normal';
+            if (currentOcc >= 85) label = 'Saturación Alta';
+            else if (currentOcc >= 60) label = 'Flujo Medio';
+            occVal.textContent = `${currentOcc}% (${label})`;
+        }
+
+        const occBar = document.getElementById('inspector-occupancy-bar');
+        if (occBar) {
+            occBar.style.width = `${currentOcc}%`;
+            if (currentOcc >= 85) {
+                occBar.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+            } else if (currentOcc >= 60) {
+                occBar.style.background = 'linear-gradient(90deg, #3b82f6, #f59e0b)';
+            } else {
+                occBar.style.background = 'linear-gradient(90deg, #10b981, #3b82f6)';
+            }
+        }
+
+        // ETAs de próximos buses
+        const etasList = document.getElementById('inspector-etas-list');
+        if (etasList && this.tmMap) {
+            const telemetryBuses = this.tmMap.getBusesTelemetry();
+            const busesWithDist = telemetryBuses.map(b => {
+                const dLat = b.lat - st.coords[0];
+                const dLng = (b.lng - st.coords[1]) * Math.cos(st.coords[0] * Math.PI / 180);
+                const distMeters = Math.hypot(dLat, dLng) * 111000;
+                return { ...b, distMeters };
+            });
+
+            busesWithDist.sort((a, b) => a.distMeters - b.distMeters);
+
+            const topBuses = busesWithDist.slice(0, 2);
+            etasList.innerHTML = topBuses.map(b => {
+                const isPlatform = b.distMeters < 120 || b.dwellTimer > 0;
+                let timeStr = '';
+                if (isPlatform) {
+                    timeStr = '<span style="color: #34d399;">🟢 En Plataforma</span>';
+                } else {
+                    const sec = Math.max(15, Math.round(b.distMeters / 8.5));
+                    timeStr = sec < 60 ? `${sec}s aprox.` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
+                }
+
+                return `
+                    <div class="eta-card">
+                        <div class="eta-code">
+                            <span style="color: ${b.color || '#f87171'};">🚌 Ruta ${b.codigo}</span>
+                            <span class="eta-time">${timeStr}</span>
+                        </div>
+                        <div class="eta-dist">
+                            Destino: ${b.destino || 'Troncal'} • ${isPlatform ? 'Abordaje activo' : Math.round(b.distMeters) + 'm de distancia'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    startLiveTelemetry() {
+        const lossCounterEl = document.getElementById('live-ticking-loss');
+        
+        // 1. Contador que incrementa segundo a segundo ($8.322 COP/seg)
         setInterval(() => {
             if (!this.isSimRunning) return;
-            this.simTickCount++;
-            if (this.simTickCount % 7 === 0) {
-                const msg = msgs[Math.floor(Math.random() * msgs.length)];
-                const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-                const el = document.getElementById('ticker-content');
-                if (el) el.textContent = `[${hora}] [DESPACHO CCO] ${msg}`;
+            // $8.322 COP por segundo acumulado
+            this.liveLossTodayCOP += 4161;
+            if (lossCounterEl) {
+                lossCounterEl.textContent = '$' + Math.floor(this.liveLossTodayCOP).toLocaleString('es-CO') + ' COP';
             }
-        }, 3000);
+        }, 500);
+
+        // 2. Refresco de telemetría de estación e inspector cada 800ms
+        setInterval(() => {
+            if (!this.isSimRunning) return;
+            this.updateLiveStationInspector();
+        }, 800);
+
+        // 3. Generador de eventos en vivo de Bitácora CCO
+        const liveEvents = [
+            { tipo: 'crit', icono: '🚨', text: 'Intento de colado masivo bloqueado por guardias en Portal Américas Plataforma 2.' },
+            { tipo: 'info', icono: '🔀', text: 'Bus F19 arriba a estación Marsella. 46 pasajeros abordaron con normalidad.' },
+            { tipo: 'warn', icono: '⚠️', text: 'Calle 72 reporta puertas automáticas forzadas. Personal técnico despachado.' },
+            { tipo: 'sec', icono: '🛡️', text: 'Patrulla mixta Policía-Gestores inicia control de validación en pasarela Ricaurte.' },
+            { tipo: 'info', icono: '👥', text: 'San Victorino registra alta afluencia comercial por jornada del Madrugón.' },
+            { tipo: 'loss', icono: '📉', text: 'CCO Telemetría: $8.322 COP perdidos en el último segundo por viajes sin validar.' },
+            { tipo: 'ok', icono: '✅', text: 'Torniquetes piso-techo de Portal Tunal registran 99.4% de efectividad anti-evasión.' },
+            { tipo: 'info', icono: '⚡', text: 'Bus H27 circulando por Caracas Sur con prioridad semafórica activada.' }
+        ];
+
+        let eventIdx = 0;
+        setInterval(() => {
+            if (!this.isSimRunning) return;
+            const ev = liveEvents[eventIdx % liveEvents.length];
+            eventIdx++;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            // Actualizar feed del sidebar
+            const feedContainer = document.getElementById('live-feed-entries');
+            if (feedContainer) {
+                const item = document.createElement('div');
+                item.className = 'feed-item';
+                item.innerHTML = `
+                    <span class="feed-time">[${timeStr}]</span>
+                    <span>${ev.icono} ${ev.text}</span>
+                `;
+                feedContainer.insertBefore(item, feedContainer.firstChild);
+
+                // Limitar a 6 items
+                while (feedContainer.children.length > 6) {
+                    feedContainer.removeChild(feedContainer.lastChild);
+                }
+            }
+
+            // Actualizar ticker superior cada 2 eventos
+            if (eventIdx % 2 === 0) {
+                const tickerEl = document.getElementById('ticker-content');
+                if (tickerEl) {
+                    tickerEl.textContent = `[${timeStr}] [CCO EN VIVO] ${ev.icono} ${ev.text}`;
+                }
+            }
+        }, 3800);
     }
 
     showToast(tipo, msg) {
@@ -770,6 +896,18 @@ Basado en la Matriz de Riesgos (R1 a R10) del Plan de Gestión de Riesgos:
         document.getElementById('map-style-select')?.addEventListener('change', (e) => {
             this.tmMap.setMapProvider(e.target.value);
             this.showToast('info', `Cambiando mapa base a: ${e.target.options[e.target.selectedIndex].text}`);
+        });
+
+        // Controles de Velocidad de la Simulación
+        document.querySelectorAll('.hud-speed-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.hud-speed-btn').forEach(b => b.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                const speed = parseFloat(e.currentTarget.dataset.speed);
+                this.tmMap.setSimSpeed(speed);
+                this.isSimRunning = speed > 0;
+                this.showToast('info', `Simulación: ${e.currentTarget.textContent.trim()}`);
+            });
         });
 
         // Botones de Salto Rápido a Nodos Clave

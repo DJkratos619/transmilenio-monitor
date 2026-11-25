@@ -101,6 +101,10 @@ class TransMilenioMap {
         this.showBuses = true;
         this.showHeatmap = false;
 
+        // Control de velocidad y física de simulación
+        this.simSpeedMultiplier = 1.0;
+        this.baseSpeed = 0.000030; // Velocidad geográfica calibrada para realismo
+
         this.hoveredStation = null;
         this.mousePos = { x: 0, y: 0 };
 
@@ -379,28 +383,102 @@ class TransMilenioMap {
     toggleBuses(show) { this.showBuses = show; }
     toggleHeatmap(show) { this.showHeatmap = show; }
 
+    setSimSpeed(multiplier) {
+        this.simSpeedMultiplier = Math.max(0, multiplier);
+    }
+
     initBuses() {
         this.buses = [];
         RUTAS_SISTEMA.forEach(ruta => {
-            const stops = ruta.paradasIds
+            const waypoints = (ruta.desvíoAlterno && ruta.desvíoAlterno.activo && ruta.desvíoAlterno.coordenadas)
+                ? ruta.desvíoAlterno.coordenadas
+                : (ruta.trayectoriaGPS || []);
+
+            if (waypoints.length < 2) return;
+
+            // Precomputar distancias geográficas reales de cada tramo
+            const segments = [];
+            let totalDist = 0;
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const p1 = waypoints[i];
+                const p2 = waypoints[i + 1];
+                const dLat = p2[0] - p1[0];
+                const dLng = (p2[1] - p1[1]) * Math.cos((p1[0] * Math.PI) / 180);
+                const dist = Math.hypot(dLat, dLng) || 0.0001;
+                segments.push({
+                    p1,
+                    p2,
+                    dist,
+                    startDist: totalDist
+                });
+                totalDist += dist;
+            }
+
+            // Estaciones oficiales asignadas a esta ruta para dwell time
+            const rutaStops = (ruta.paradasIds || [])
                 .map(id => ESTACIONES_DATA.find(e => e.id === id))
                 .filter(Boolean);
 
-            if (stops.length < 2) return;
+            // Generar 2 buses escalonados en sentidos opuestos o distanciados
+            const numBuses = 2;
+            for (let b = 0; b < numBuses; b++) {
+                const initFraction = (b / numBuses) + 0.12;
+                const targetDist = (initFraction % 1.0) * totalDist;
 
-            for (let i = 0; i < 2; i++) {
+                let segIdx = 0;
+                let segProg = 0;
+                for (let s = 0; s < segments.length; s++) {
+                    const seg = segments[s];
+                    if (targetDist >= seg.startDist && targetDist <= seg.startDist + seg.dist) {
+                        segIdx = s;
+                        segProg = (targetDist - seg.startDist) / seg.dist;
+                        break;
+                    }
+                }
+
+                const seg = segments[segIdx] || segments[0];
+                const curLat = seg.p1[0] + (seg.p2[0] - seg.p1[0]) * segProg;
+                const curLng = seg.p1[1] + (seg.p2[1] - seg.p1[1]) * segProg;
+
                 this.buses.push({
+                    id: `BUS-${ruta.id}-${b + 1}`,
                     rutaId: ruta.id,
-                    nombre: ruta.nombre.split('/')[0],
+                    codigo: ruta.nombre.split('/')[0].trim(),
+                    origen: ruta.origen,
+                    destinoFinal: ruta.destino,
+                    destino: b % 2 === 0 ? ruta.destino : ruta.origen,
                     color: ruta.color,
-                    stops: stops,
-                    segmentIdx: (i * 2) % (stops.length - 1),
-                    progress: i * 0.45,
-                    direction: 1,
-                    speed: 0.003 + Math.random() * 0.002
+                    waypoints,
+                    segments,
+                    totalDist,
+                    rutaStops,
+                    segIdx,
+                    segProgress: segProg,
+                    direction: b % 2 === 0 ? 1 : -1,
+                    lat: curLat,
+                    lng: curLng,
+                    heading: 0,
+                    dwellTimer: 0,
+                    lastStopId: null,
+                    status: 'En tránsito',
+                    paxCount: Math.floor(120 + Math.random() * 110)
                 });
             }
         });
+    }
+
+    getBusesTelemetry() {
+        return this.buses.map(b => ({
+            id: b.id,
+            codigo: b.codigo,
+            destino: b.destino,
+            color: b.color,
+            lat: b.lat,
+            lng: b.lng,
+            status: b.status,
+            dwellTimer: b.dwellTimer,
+            paxCount: b.paxCount
+        }));
     }
 
     // ==========================================================================
@@ -557,49 +635,183 @@ class TransMilenioMap {
 
     updateAndDrawBuses(ctx) {
         ctx.save();
-        this.buses.forEach(bus => {
-            bus.progress += bus.speed;
-            if (bus.progress >= 1.0) {
-                bus.progress = 0;
-                bus.segmentIdx += bus.direction;
+        const speedMult = this.simSpeedMultiplier;
 
-                if (bus.segmentIdx >= bus.stops.length - 1) {
-                    bus.direction = -1;
-                    bus.segmentIdx = bus.stops.length - 2;
-                } else if (bus.segmentIdx < 0) {
-                    bus.direction = 1;
-                    bus.segmentIdx = 0;
+        this.buses.forEach(bus => {
+            if (!bus.segments || bus.segments.length === 0) return;
+
+            // 1. FÍSICA Y CINEMÁTICA DE MOVIMIENTO
+            if (speedMult > 0) {
+                if (bus.dwellTimer > 0) {
+                    // Bus detenido en plataforma por abordaje
+                    bus.dwellTimer -= speedMult;
+                    bus.status = 'Abordando en plataforma';
+                } else {
+                    bus.status = 'En tránsito';
+                    const curSeg = bus.segments[bus.segIdx];
+                    const distPerFrame = this.baseSpeed * speedMult;
+                    const deltaProg = distPerFrame / (curSeg.dist || 0.001);
+
+                    bus.segProgress += deltaProg * bus.direction;
+
+                    // Manejo de final de segmento y cabeceras
+                    if (bus.direction === 1) {
+                        if (bus.segProgress >= 1.0) {
+                            bus.segProgress = 0;
+                            bus.segIdx++;
+                            if (bus.segIdx >= bus.segments.length) {
+                                // Llegó a terminal: retorno y pausa de cabecera
+                                bus.direction = -1;
+                                bus.segIdx = bus.segments.length - 1;
+                                bus.segProgress = 1.0;
+                                bus.dwellTimer = 110;
+                                bus.destino = bus.destino === bus.destinoFinal ? bus.origen : bus.destinoFinal;
+                            }
+                        }
+                    } else {
+                        if (bus.segProgress <= 0.0) {
+                            bus.segProgress = 1.0;
+                            bus.segIdx--;
+                            if (bus.segIdx < 0) {
+                                // Llegó a cabecera opuesta
+                                bus.direction = 1;
+                                bus.segIdx = 0;
+                                bus.segProgress = 0.0;
+                                bus.dwellTimer = 110;
+                                bus.destino = bus.destino === bus.origen ? bus.destinoFinal : bus.origen;
+                            }
+                        }
+                    }
+
+                    // Recalcular posición exacta en carretera
+                    const activeSeg = bus.segments[bus.segIdx];
+                    if (activeSeg) {
+                        bus.lat = activeSeg.p1[0] + (activeSeg.p2[0] - activeSeg.p1[0]) * bus.segProgress;
+                        bus.lng = activeSeg.p1[1] + (activeSeg.p2[1] - activeSeg.p1[1]) * bus.segProgress;
+
+                        // Comprobar si arriba a una estación de su ruta para hacer parada
+                        for (const stop of bus.rutaStops) {
+                            const dLat = Math.abs(bus.lat - stop.coords[0]);
+                            const dLng = Math.abs(bus.lng - stop.coords[1]);
+                            if (dLat < 0.0016 && dLng < 0.0016) {
+                                if (bus.lastStopId !== stop.id) {
+                                    bus.lastStopId = stop.id;
+                                    bus.dwellTimer = 75; // ~1.2s de parada
+                                    bus.status = `Abordando en ${stop.nombre}`;
+                                    // Variación realista de pasajeros
+                                    bus.paxCount = Math.max(50, Math.min(250, bus.paxCount + Math.floor(Math.random() * 30 - 14)));
+                                    break;
+                                }
+                            } else if (bus.lastStopId === stop.id && (dLat > 0.003 || dLng > 0.003)) {
+                                bus.lastStopId = null;
+                            }
+                        }
+                    }
                 }
             }
 
-            const fromSt = bus.stops[bus.segmentIdx];
-            const toSt = bus.stops[bus.segmentIdx + 1];
-            if (!fromSt || !toSt) return;
+            // 2. CÁLCULO DE PROYECCIÓN Y ORIENTACIÓN EN PANTALLA
+            const pt = this.project(bus.lat, bus.lng);
+            if (pt.x < -60 || pt.x > this.width + 60 || pt.y < -60 || pt.y > this.height + 60) return;
 
-            const lat = fromSt.coords[0] + (toSt.coords[0] - fromSt.coords[0]) * bus.progress;
-            const lng = fromSt.coords[1] + (toSt.coords[1] - fromSt.coords[1]) * bus.progress;
+            const activeSeg = bus.segments[bus.segIdx];
+            if (!activeSeg) return;
 
-            const pt = this.project(lat, lng);
+            const pt1 = this.project(activeSeg.p1[0], activeSeg.p1[1]);
+            const pt2 = this.project(activeSeg.p2[0], activeSeg.p2[1]);
+            const targetAngle = Math.atan2((pt2.y - pt1.y) * bus.direction, (pt2.x - pt1.x) * bus.direction);
+            bus.heading = targetAngle;
 
-            ctx.fillStyle = bus.color;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.shadowBlur = 8;
+            // 3. RENDERIZADO DETALLADO DEL BUS BIARTICULADO TRANSMILENIO
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.rotate(bus.heading);
 
-            const bw = 26;
-            const bh = 14;
-
+            // Haz de luz delantera proyectada sobre el pavimento
+            const lightGrad = ctx.createRadialGradient(16, 0, 2, 42, 0, 26);
+            lightGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+            lightGrad.addColorStop(0.7, 'rgba(254, 240, 138, 0.15)');
+            lightGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+            ctx.fillStyle = lightGrad;
             ctx.beginPath();
-            ctx.roundRect(pt.x - bw / 2, pt.y - bh / 2, bw, bh, 3);
+            ctx.moveTo(14, -4);
+            ctx.lineTo(44, -13);
+            ctx.lineTo(44, 13);
+            ctx.lineTo(14, 4);
+            ctx.closePath();
+            ctx.fill();
+
+            // Halo pulsante si está abordando en estación
+            if (bus.dwellTimer > 0) {
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Sombra realista proyectada
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetY = 2;
+
+            // Coche Trasero (Rojo TM)
+            ctx.fillStyle = '#dc2626';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(-20, -6, 16, 12, [3, 0, 0, 3]);
             ctx.fill();
             ctx.stroke();
 
+            // Ventanas coche trasero
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-18, -5, 11, 2);
+            ctx.fillRect(-18, 3, 11, 2);
+
+            // Fuelle de articulación (acordeón negro)
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(-4, -5.5, 4, 11);
+            ctx.strokeStyle = '#475569';
+            ctx.strokeRect(-4, -5.5, 4, 11);
+
+            // Coche Delantero (Rojo TM)
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.roundRect(0, -6, 18, 12, [0, 4, 4, 0]);
+            ctx.fill();
+            ctx.stroke();
+
+            // Ventanas coche delantero
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(2, -5, 10, 2);
+            ctx.fillRect(2, 3, 10, 2);
+
+            // Parabrisas Delantero
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(13, -4.5, 3.5, 9);
+
+            // Rutero LED Frontal Amarillo
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(16.5, -3.5, 1.5, 7);
+
+            // Chapa en el techo con código de ruta legible
+            ctx.shadowColor = 'transparent';
+            ctx.fillStyle = '#0b1120';
+            ctx.beginPath();
+            ctx.roundRect(-8, -5, 16, 10, 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f87171';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 9px Inter, sans-serif';
+            ctx.font = 'bold 8px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(bus.nombre, pt.x, pt.y);
+            ctx.fillText(bus.codigo, 0, 0.5);
+
+            ctx.restore();
         });
         ctx.restore();
     }
