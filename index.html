@@ -100,15 +100,15 @@
 
                 <!-- HUD Superior Flotante sobre el Mapa -->
                 <div class="map-hud-top">
-                    <!-- Selector de Mapa Real en Línea (Sin API Key) -->
+                    <!-- Selector de Mapa Real en Línea (Con Google Maps) -->
                     <div class="hud-panel">
                         <span class="hud-label">Mapa Base:</span>
                         <select id="map-style-select" class="hud-select" style="font-weight: 700; color: #38bdf8;">
-                            <option value="esri-dark">🌃 Esri Dark Canvas (Noche)</option>
-                            <option value="satellite">🛰️ Satélite Real (Esri HD)</option>
-                            <option value="esri-streets">🛣️ Esri Calles de Bogotá</option>
-                            <option value="osm">🗺️ OpenStreetMap Oficial</option>
-                            <option value="esri-topo">⛰️ Esri Topográfico & Cerros</option>
+                            <option value="google-hybrid" selected>🗺️ Google Maps Híbrido (Satélite)</option>
+                            <option value="google-roadmap">🛣️ Google Maps Calles (Vial)</option>
+                            <option value="google-traffic">🚦 Google Maps Tráfico</option>
+                            <option value="google-terrain">⛰️ Google Maps Terreno</option>
+                            <option value="esri-dark">🌃 Modo Oscuro CCO (Esri Dark)</option>
                             <option value="radar">📐 Esquema CCO (Sintético)</option>
                         </select>
                     </div>
@@ -386,7 +386,7 @@
                                 Evasión del pago de pasajes del sistema de transporte público de Bogotá
                             </div>
                             <div style="font-size: 10px; color: #cbd5e1;">
-                                <b>Equipo:</b> Karina Julieth Garzón, Jair Alexander Hernández, Juan Manuel Muñoz, Josué Ospino Ramírez
+                                <b>Equipo:</b> Josué David Ospino Ramírez, David Fernando Pulido
                             </div>
                             <div style="font-size: 10px; color: #94a3b8;">
                                 <b>Patrocinador:</b> Alcaldía Mayor de Bogotá • <b>Presupuesto Ref:</b> 3 Billones COP

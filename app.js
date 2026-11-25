@@ -686,10 +686,8 @@ class TransMilenioApp {
 **Proyecto:** ${p.titulo}
 **Fecha:** ${new Date().toLocaleDateString('es-CO')}
 **Equipo de Trabajo:**
-- Karina Julieth Garzón
-- Jair Alexander Hernández
-- Juan Manuel Muñoz
-- Josué Ospino Ramírez
+- Josué David Ospino Ramírez
+- David Fernando Pulido
 **Patrocinador:** ${p.patrocinador}
 **Presupuesto de Referencia:** ${p.presupuestoReferencia}
 

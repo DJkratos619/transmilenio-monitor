@@ -35,36 +35,36 @@ class TransMilenioMap {
         this.container.innerHTML = '';
         this.container.appendChild(this.canvas);
 
-        // Proveedores de Mapas Reales en Línea 100% Gratuitos (CERO API KEY requerida)
+        // Proveedores de Mapas Reales en Línea (Con Google Maps Oficial y Cero API Key requerida)
         this.providers = {
-            'esri-dark': {
-                nombre: 'Esri Dark Canvas (Modo Noche)',
-                url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${z}/${y}/${x}`,
+            'google-hybrid': {
+                nombre: 'Google Maps Híbrido (Satélite + Calles)',
+                url: (z, x, y) => `https://mt${(x + y) % 4}.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${z}`,
+                overlayAlpha: 0.12,
+                invert: false
+            },
+            'google-roadmap': {
+                nombre: 'Google Maps Calles (Estándar)',
+                url: (z, x, y) => `https://mt${(x + y) % 4}.google.com/vt/lyrs=m&x=${x}&y=${y}&z=${z}`,
+                overlayAlpha: 0.04,
+                invert: false
+            },
+            'google-traffic': {
+                nombre: 'Google Maps Tráfico en Vivo',
+                url: (z, x, y) => `https://mt${(x + y) % 4}.google.com/vt/lyrs=m,traffic&x=${x}&y=${y}&z=${z}`,
+                overlayAlpha: 0.04,
+                invert: false
+            },
+            'google-terrain': {
+                nombre: 'Google Maps Terreno & Relieve',
+                url: (z, x, y) => `https://mt${(x + y) % 4}.google.com/vt/lyrs=p&x=${x}&y=${y}&z=${z}`,
                 overlayAlpha: 0.08,
                 invert: false
             },
-            'satellite': {
-                nombre: 'Satélite Real (Esri World Imagery)',
-                url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,
-                overlayAlpha: 0.20,
-                invert: false
-            },
-            'esri-streets': {
-                nombre: 'Esri Calles y Avenidas de Bogotá',
-                url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`,
-                overlayAlpha: 0.05,
-                invert: false
-            },
-            'osm': {
-                nombre: 'OpenStreetMap Oficial',
-                url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
-                overlayAlpha: 0.05,
-                invert: false
-            },
-            'esri-topo': {
-                nombre: 'Esri Topográfico & Relieve',
-                url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${z}/${y}/${x}`,
-                overlayAlpha: 0.10,
+            'esri-dark': {
+                nombre: 'Modo Oscuro CCO (Esri Dark Canvas)',
+                url: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${z}/${y}/${x}`,
+                overlayAlpha: 0.08,
                 invert: false
             },
             'radar': {
@@ -75,7 +75,7 @@ class TransMilenioMap {
             }
         };
 
-        this.currentProvider = 'esri-dark';
+        this.currentProvider = 'google-hybrid';
         this.tileCache = new Map();
 
         // Parámetros geográficos de Bogotá en Web Mercator

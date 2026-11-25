@@ -1,7 +1,7 @@
 // ==============================================================================
 // SISTEMA DE MONITOREO Y GESTIÓN DE PÉRDIDAS - TRANSMILENIO BOGOTÁ
 // PROYECTO ACADÉMICO: EJECUCIÓN Y CONTROL DE PROYECTOS - ESEIT
-// Integrantes: Karina Julieth Garzón, Jair Alexander Hernández, Juan Manuel Muñoz, Josué Ospino Ramírez
+// Integrantes: Josué David Ospino Ramírez, David Fernando Pulido
 // Basado en cifras oficiales del Concejo de Bogotá 2024 y Alcaldía Mayor
 // ==============================================================================
 
@@ -10,10 +10,8 @@ const ESEIT_PROYECTO_INFO = {
     asignatura: "Ejecución y Control de Proyectos",
     titulo: "Evasión del pago de pasajes del sistema de transporte público de Bogotá",
     integrantes: [
-        "Karina Julieth Garzón",
-        "Jair Alexander Hernández",
-        "Juan Manuel Muñoz",
-        "Josué Ospino Ramírez"
+        "Josué David Ospino Ramírez",
+        "David Fernando Pulido"
     ],
     fechaElaboracion: "09/04/2025",
     patrocinador: "Alcaldía Mayor de Bogotá",
